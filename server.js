@@ -83,5 +83,23 @@ app.post('/transcribe', (req, res) => {
     processQueue();
 });
 
+// Add this to server.js
+app.get('/get-upload-url', async (req, res) => {
+    const fileName = `recording-${Date.now()}.m4a`;
+    const params = {
+        Bucket: process.env.S3_BUCKET,
+        Key: `uploads/${fileName}`,
+        Expires: 3600, // URL lasts for 1 hour
+        ContentType: 'audio/m4a'
+    };
+
+    try {
+        const uploadUrl = await s3.getSignedUrlPromise('putObject', params);
+        res.json({ uploadUrl, fileName });
+    } catch (err) {
+        res.status(500).json({ error: "Could not create upload URL" });
+    }
+});
+
 const PORT = 8000;
 app.listen(PORT, () => console.log(`Samedays Manager Running on Port ${PORT}`));
